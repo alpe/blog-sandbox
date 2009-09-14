@@ -56,16 +56,12 @@ public class SimplePerson {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public Salutation getSalutation() {
 		return salutation;
 	}
 
-	public void setSalutation(Salutation salutation) {
-		this.salutation = salutation;
+	public Title getTitle() {
+		return title;
 	}
 
 	@Override
