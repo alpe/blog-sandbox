@@ -18,12 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author ap
  * 
  */
-@NamedQuery(name = SimplePerson.QUERY_FIMD_BY_SALUTATION, query = "from "
-		+ SimplePerson.TABLE_NAME + " where salutation =:salutation")
+@NamedQuery(name = SimplePerson.QUERY_FIMD_BY_SALUTATION, query = "from de.alpe.blog.samples.hibernate_enum.testsupport.SimplePerson where salutation =:salutation")
 @Entity(name = SimplePerson.TABLE_NAME)
 public class SimplePerson {
 
 	public static final String TABLE_NAME = "SimplePerson";
+
 	public static final String QUERY_FIMD_BY_SALUTATION = "SimplePerson.salutation";
 
 	@Id

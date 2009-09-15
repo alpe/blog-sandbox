@@ -86,7 +86,7 @@ public class DbIdAwareEnumType extends EnumType {
 			super.nullSafeSet(st, value, index);
 			return;
 		}
-		st.setObject(index, ((DBEnum) value).getDbId(), Types.INTEGER);
+		st.setObject(index, ((DBEnum) value).getId(), Types.INTEGER);
 	}
 
 	/**

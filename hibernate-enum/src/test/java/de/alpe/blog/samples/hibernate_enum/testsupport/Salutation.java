@@ -22,7 +22,7 @@ public enum Salutation implements DBEnum {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int getDbId() {
+	public int getId() {
 		return dbId;
 	}
 
