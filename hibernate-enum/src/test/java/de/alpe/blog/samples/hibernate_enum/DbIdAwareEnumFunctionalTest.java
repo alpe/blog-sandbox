@@ -87,9 +87,9 @@ public class DbIdAwareEnumFunctionalTest extends
 	public void findWithSQLAndDBId_matchingResultFound() throws Exception {
 		List<Map<String, Object>> result = simpleJdbcTemplate.queryForList(
 				"select name from " + SimplePerson.TABLE_NAME
-						+ " where salutation=?", Salutation.MRS.getId());
+						+ " where salutation=?", Salutation.MR.getId());
 		assertThat(result.size(), is(1));
-		assertThat(result.get(0).get("name"), is((Object) NAME_BAR));
+		assertThat(result.get(0).get("name"), is((Object) NAME_FOO));
 	}
 
 	@Test
