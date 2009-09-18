@@ -1,6 +1,7 @@
 package de.alpe.blog.samples.hibernate_enum;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.List;
@@ -13,10 +14,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.test.annotation.NotTransactional;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import de.alpe.blog.samples.hibernate_enum.testsupport.Salutation;
 import de.alpe.blog.samples.hibernate_enum.testsupport.SimplePerson;
@@ -38,7 +43,9 @@ public class DbIdAwareEnumFunctionalTest extends
 	@Autowired
 	HibernateTemplate template;
 
-	@Transactional
+	@Autowired
+	PlatformTransactionManager txManager;
+
 	@Before
 	public void prepareTestdata() {
 		deleteFromTables(SimplePerson.TABLE_NAME);
@@ -52,18 +59,22 @@ public class DbIdAwareEnumFunctionalTest extends
 	}
 
 	@Test
-	@Transactional
 	public void findWithNamedQuery_matchingResultFound() throws Exception {
-		List<?> result = template.findByNamedQueryAndNamedParam(
-				SimplePerson.QUERY_FIMD_BY_SALUTATION, "salutation",
-				Salutation.MR);
-		assertThat(result.size(), is(1));
-		SimplePerson p = (SimplePerson) result.get(0);
+		SimplePerson p = findOneByNamedQuery(Salutation.MR);
 		assertThat(p.getName(), is(NAME_FOO));
 	}
 
+	private SimplePerson findOneByNamedQuery(Salutation salutation) {
+		List<?> result = template
+				.findByNamedQueryAndNamedParam(
+						SimplePerson.QUERY_FIMD_BY_SALUTATION, "salutation",
+						salutation);
+		assertThat(result.size(), is(1));
+		SimplePerson p = (SimplePerson) result.get(0);
+		return p;
+	}
+
 	@Test
-	@Transactional
 	public void findWithNamedQuery_noMatchingResult() throws Exception {
 		List<?> result = template.findByNamedQueryAndNamedParam(
 				SimplePerson.QUERY_FIMD_BY_SALUTATION, "salutation",
@@ -72,7 +83,6 @@ public class DbIdAwareEnumFunctionalTest extends
 	}
 
 	@Test
-	@Transactional
 	public void findWithCriteria_matchingResultFound() throws Exception {
 		List<?> result = template.findByCriteria(DetachedCriteria.forClass(
 				SimplePerson.class).add(
@@ -83,7 +93,6 @@ public class DbIdAwareEnumFunctionalTest extends
 	}
 
 	@Test
-	@Transactional
 	public void findWithSQLAndDBId_matchingResultFound() throws Exception {
 		List<Map<String, Object>> result = simpleJdbcTemplate.queryForList(
 				"select name from " + SimplePerson.TABLE_NAME
@@ -93,7 +102,6 @@ public class DbIdAwareEnumFunctionalTest extends
 	}
 
 	@Test
-	@Transactional
 	public void findWithSQLAndOrdinal_noMatchingResult() throws Exception {
 		List<Map<String, Object>> result = simpleJdbcTemplate.queryForList(
 				"select name from " + SimplePerson.TABLE_NAME
@@ -102,7 +110,6 @@ public class DbIdAwareEnumFunctionalTest extends
 	}
 
 	@Test
-	@Transactional
 	public void findClassicEnum_withSQLAndOrdinal_matchingResultFound()
 			throws Exception {
 		List<Map<String, Object>> result = simpleJdbcTemplate.queryForList(
@@ -112,4 +119,29 @@ public class DbIdAwareEnumFunctionalTest extends
 		assertThat(result.get(0).get("name"), is((Object) NAME_FOO));
 	}
 
+	@NotTransactional
+	@Test
+	public void updateWasSuccessfull() throws Exception {
+		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+		final SimplePerson person = (SimplePerson) txTemplate
+				.execute(new TransactionCallback() {
+					@Override
+					public Object doInTransaction(TransactionStatus status) {
+						SimplePerson p = findOneByNamedQuery(Salutation.MR);
+						p.setSalutation(Salutation.MRS);
+						return p;
+					}
+				});
+		txTemplate.execute(new TransactionCallback() {
+			@Override
+			public Object doInTransaction(TransactionStatus status) {
+				List<?> result = template.findByExample(person);
+				assertThat(result.size(), is(1));
+				SimplePerson p = (SimplePerson) result.get(0);
+				assertThat(p, is(notNullValue()));
+				assertThat(p.getSalutation(), is(Salutation.MRS));
+				return null;
+			}
+		});
+	}
 }

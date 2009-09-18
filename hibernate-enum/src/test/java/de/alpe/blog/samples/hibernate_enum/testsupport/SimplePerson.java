@@ -60,6 +60,10 @@ public class SimplePerson {
 		return salutation;
 	}
 
+	public void setSalutation(Salutation salutation) {
+		this.salutation = salutation;
+	}
+
 	public Title getTitle() {
 		return title;
 	}
